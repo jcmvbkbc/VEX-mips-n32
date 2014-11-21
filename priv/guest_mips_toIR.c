@@ -775,7 +775,8 @@ static Bool branch_or_jump(UChar * addr)
    }
 
    /* Cavium Specific instructions. */
-   if (opcode == 0x32 || opcode == 0x3A) {  /* BBIT0, BBIT1 */
+   if (opcode == 0x32 || opcode == 0x3A ||  /* BBIT0, BBIT1 */
+       opcode == 0x36 || opcode == 0x3E ) { /* BBIT032, BBIT132 */
       return True;
    }
 
@@ -13502,6 +13503,46 @@ static DisResult disInstr_MIPS_WRK ( Bool(*resteerOkFn) (/*opaque */void *,
       LOAD_STORE_PATTERN;
       putDReg(ft, load(Ity_F64, mkexpr(t1)));
       break;
+
+   case 0x36:  /* Branch on Bit Clear - BBIT032; Cavium OCTEON */
+      /* Cavium Specific instructions. */
+      if (VEX_MIPS_COMP_ID(archinfo->hwcaps) == VEX_PRID_COMP_CAVIUM &&
+          mode64) {
+         DIP("bbit032 r%d, 0x%x, %x", rs, rt, imm);
+         t0 = newTemp(Ity_I64);
+         t1 = newTemp(Ity_I64);
+         assign(t0, mkU64(0x1));
+         assign(t1, binop(Iop_Shl64, mkexpr(t0), mkU8(rt + 32)));
+         dis_branch(False, binop(Iop_CmpEQ64,
+                                 binop(Iop_And64,
+                                       mkexpr(t1),
+                                       getIReg(rs)),
+                                 mkU64(0x0)),
+                    imm, &bstmt);
+         break;
+      } else {
+         goto decode_failure;
+      }
+
+   case 0x3E:  /* Branch on Bit Set - BBIT132; Cavium OCTEON */
+      /* Cavium Specific instructions. */
+      if (VEX_MIPS_COMP_ID(archinfo->hwcaps) == VEX_PRID_COMP_CAVIUM &&
+          mode64) {
+         DIP("bbit132 r%d, 0x%x, %x", rs, rt, imm);
+         t0 = newTemp(Ity_I64);
+         t1 = newTemp(Ity_I64);
+         assign(t0, mkU64(0x1));
+         assign(t1, binop(Iop_Shl64, mkexpr(t0), mkU8(rt + 32)));
+         dis_branch(False, binop(Iop_CmpNE64,
+                                 binop(Iop_And64,
+                                       mkexpr(t1),
+                                       getIReg(rs)),
+                                 mkU64(0x0)),
+                    imm, &bstmt);
+         break;
+      } else {
+         goto decode_failure;
+      }
 
    case 0x3D:
       /* Store Doubleword from Floating Point - SDC1 */
