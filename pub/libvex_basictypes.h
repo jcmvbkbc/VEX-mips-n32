@@ -212,10 +212,17 @@ typedef  unsigned long HWord;
 #   define VEX_HOST_WORDSIZE 4
 #   define VEX_REGPARM(_n) /* */
 
+#if defined(__mips64) && __mips64 == 1
+#   define VEX_HOST_REGISTERSIZE 8
+#endif
+
 #else
 #   error "Vex: Fatal: Can't establish the host architecture"
 #endif
 
+#if !defined(VEX_HOST_REGISTERSIZE)
+#define VEX_HOST_REGISTERSIZE VEX_HOST_WORDSIZE
+#endif
 
 #if VEX_HOST_WORDSIZE == 8
    static inline ULong Ptr_to_ULong ( void* p ) {
