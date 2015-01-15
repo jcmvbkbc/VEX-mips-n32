@@ -2594,6 +2594,7 @@ static Bool dis_instr_CVM ( UInt theInstr )
                break;
 
             case 0x2E:  /* Set Equals Immediate - SEQI; Cavium OCTEON */
+               imm >>= 6;
                DIP("seqi r%d, r%d, %d", regRt, regRs, imm);
                if (mode64)
                   putIReg(regRt, unop(Iop_1Uto64,
@@ -2606,6 +2607,7 @@ static Bool dis_instr_CVM ( UInt theInstr )
                break;
 
             case 0x2F:  /* Set Not Equals Immediate - SNEI; Cavium OCTEON */
+               imm >>= 6;
                DIP("snei r%d, r%d, %d", regRt, regRs, imm);
                if (mode64)
                   putIReg(regRt, unop(Iop_1Uto64,
